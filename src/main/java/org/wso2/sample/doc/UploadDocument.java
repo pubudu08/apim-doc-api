@@ -21,17 +21,6 @@ import java.io.IOException;
  */
 public class UploadDocument {
 
-	public static final String ADD_DOC_API_CALL =
-			"https://" + APIConstantValues.HOST_NAME + ":" + APIConstantValues.HTTPS_PORT +
-			"/publisher/site/blocks/documentation/ajax/docs.jag?action=addDocumentation&mode='-'&" +
-			"provider=subscriber1&apiName=TestDocAPI&version=1.0.0&docName=attachment&" +
-			"docType=how+to&sourceType=file&docUrl='-'&summary=testing";
-	public static final String LOGIN_API_CALL =
-			"https://" + APIConstantValues.HOST_NAME + ":" + APIConstantValues.HTTPS_PORT +
-			"/publisher/site/blocks/user/login/ajax/login.jag?action=login&username=" +
-			APIConstantValues.USER_NAME + "&password=" + APIConstantValues.PASSWORD;
-	public static final String FILE_PATH = "/home/pubudu/Desktop/t";
-
 	public static void main(String[] args) {
 
 		AuthenticationAdminServiceClient
@@ -40,35 +29,41 @@ public class UploadDocument {
 				                     APIConstantValues.KEY_STORE_PASSWORD);
 		try {
 			HttpClient httpClient = HttpClientSingleton.getHttpClientInstance();
-			HttpPost request = new HttpPost(LOGIN_API_CALL);
-			HttpPost docRequest = new HttpPost(ADD_DOC_API_CALL);
+			HttpPost request = new HttpPost(APIConstantValues.LOGIN_API_CALL);
+			HttpPost docRequest = new HttpPost(APIConstantValues.ADD_DOC_API_CALL);
 			HttpResponse response = httpClient.execute(request);
-			System.out.println("Http Status Code := " + response.getStatusLine());
+			System.out.println("Sign In Http Status Code := " + response.getStatusLine());
 			for (Header header : response.getAllHeaders()) {
 				if (header.getName().equals("Set-Cookie")) {
 					docRequest.setHeader("Cookie", header.getValue().split(";", 2)[0]);
-					System.out.println(header.getValue().split(";", 2)[0]);
 				}
-				System.out.println(header);
 			}
-			System.out.println();
-
-			File document = new File(FILE_PATH);
+			File document = new File(APIConstantValues.FILE_PATH);
 			MultipartEntity multipartEntity = new MultipartEntity();
-			System.out.println(document.getAbsolutePath());
-			System.out.println();
-			multipartEntity.addPart("docLocation", new StringBody(document.getAbsolutePath()));
+			multipartEntity.addPart("action",new StringBody("addDocumentation"));
+			multipartEntity.addPart("mode",new StringBody("-"));
+			multipartEntity.addPart("provider",new StringBody("subscriber1"));
+			multipartEntity.addPart("apiName",new StringBody("TestDocAPI"));
+			multipartEntity.addPart("version",new StringBody("1.0.0"));
+			multipartEntity.addPart("docName",new StringBody("attachment"));
+			multipartEntity.addPart("docType",new StringBody("how to"));
+			multipartEntity.addPart("sourceType",new StringBody("file"));
+			multipartEntity.addPart("summary",new StringBody("testing"));
+			multipartEntity.addPart("docUrl",new StringBody("-"));
 			ContentBody fileBody = new FileBody(document, "text/plain");
-			multipartEntity.addPart("attachment", fileBody);
+			multipartEntity.addPart("docLocation", fileBody);
 			docRequest.setEntity(multipartEntity);
 
 			for (Header header : docRequest.getAllHeaders()) {
 				System.out.println(header);
 			}
 			System.out.println();
-			System.out.println("executing request " + docRequest.getRequestLine());
+			System.out.println("Executing request " + docRequest.getRequestLine());
 			HttpResponse docResponse = httpClient.execute(docRequest);
 			System.out.println("Http Status Code := " + docResponse.getStatusLine());
+			for (Header header : docResponse.getAllHeaders()) {
+				System.out.println(header);
+			}
 			System.out.println();
 		} catch (IOException e) {
 			e.printStackTrace();
