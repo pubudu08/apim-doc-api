@@ -5,6 +5,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.entity.mime.content.ByteArrayBody;
 import org.apache.http.entity.mime.content.ContentBody;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
@@ -14,6 +15,7 @@ import org.wso2.sample.doc.singleton.HttpClientSingleton;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 
 /**
  * Created by Pubudu Dissanayake on 8/1/14.
@@ -38,20 +40,22 @@ public class UploadDocument {
 					docRequest.setHeader("Cookie", header.getValue().split(";", 2)[0]);
 				}
 			}
-			File document = new File(APIConstantValues.FILE_PATH);
+//			File document = new File(APIConstantValues.FILE_PATH); // linux
+			byte[] fileInBytes = Files.readAllBytes(APIConstantValues.FILE_PATH);
 			MultipartEntity multipartEntity = new MultipartEntity();
 			multipartEntity.addPart("action", new StringBody("addDocumentation"));
 			multipartEntity.addPart("mode", new StringBody("-"));
 			multipartEntity.addPart("provider", new StringBody("subscriber1"));
 			multipartEntity.addPart("apiName", new StringBody("TestDocAPI"));
 			multipartEntity.addPart("version", new StringBody("1.0.0"));
-			multipartEntity.addPart("docName", new StringBody("attachment"));
+			multipartEntity.addPart("docName", new StringBody("attachment1"));
 			multipartEntity.addPart("docType", new StringBody("how to"));
 			multipartEntity.addPart("sourceType", new StringBody("file"));
 			multipartEntity.addPart("summary", new StringBody("testing"));
 			multipartEntity.addPart("docUrl", new StringBody("-"));
-			ContentBody fileBody = new FileBody(document, "text/plain");
-			multipartEntity.addPart("docLocation", fileBody);
+//			ContentBody fileBody = new FileBody(document, "text/plain");
+			ContentBody contentBody = new ByteArrayBody(fileInBytes,"IS");
+			multipartEntity.addPart("docLocation", contentBody);
 			docRequest.setEntity(multipartEntity);
 
 			for (Header header : docRequest.getAllHeaders()) {
